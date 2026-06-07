@@ -1,0 +1,164 @@
+package com.mediassist.platform.document.application;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mediassist.platform.audit.api.dto.AuditEventCreateRequest;
+import com.mediassist.platform.audit.application.AuditApplicationService;
+import com.mediassist.platform.audit.domain.AuditAction;
+import com.mediassist.platform.audit.domain.AuditEntityType;
+import com.mediassist.platform.document.api.dto.MedicalDocumentResponse;
+import com.mediassist.platform.document.api.dto.MedicalDocumentUploadRequest;
+import com.mediassist.platform.document.domain.DocumentStatus;
+import com.mediassist.platform.document.domain.MedicalDocument;
+import com.mediassist.platform.document.domain.MedicalDocumentRepository;
+import com.mediassist.platform.patient.application.PatientNotFoundException;
+import com.mediassist.platform.patient.domain.Patient;
+import com.mediassist.platform.patient.domain.PatientRepository;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+
+@Service
+@Validated
+@Transactional
+public class DocumentApplicationService {
+
+    private final MedicalDocumentRepository medicalDocumentRepository;
+    private final PatientRepository patientRepository;
+    private final MedicalDocumentMapper medicalDocumentMapper;
+    private final AuditApplicationService auditApplicationService;
+    private final ObjectMapper objectMapper;
+
+    public DocumentApplicationService(
+        MedicalDocumentRepository medicalDocumentRepository,
+        PatientRepository patientRepository,
+        MedicalDocumentMapper medicalDocumentMapper,
+        AuditApplicationService auditApplicationService,
+        ObjectMapper objectMapper
+    ) {
+        this.medicalDocumentRepository = medicalDocumentRepository;
+        this.patientRepository = patientRepository;
+        this.medicalDocumentMapper = medicalDocumentMapper;
+        this.auditApplicationService = auditApplicationService;
+        this.objectMapper = objectMapper;
+    }
+
+    public MedicalDocumentResponse createDocumentMetadata(
+        @NotNull UUID patientId,
+        @NotNull @Valid MedicalDocumentUploadRequest request,
+        @NotNull @Valid DocumentStorageDetails storageDetails,
+        @NotBlank String performedBy
+    ) {
+        Patient patient = findPatientById(patientId);
+        validateStoragePathIsAvailable(storageDetails.storagePath());
+
+        MedicalDocument medicalDocument = medicalDocumentMapper.toNewMedicalDocument(
+            patient,
+            request,
+            storageDetails
+        );
+        medicalDocument.setUploadedAt(OffsetDateTime.now(ZoneOffset.UTC));
+
+        MedicalDocument savedDocument = medicalDocumentRepository.save(medicalDocument);
+
+        auditApplicationService.recordAuditEvent(new AuditEventCreateRequest(
+            AuditEntityType.MEDICAL_DOCUMENT,
+            savedDocument.getId(),
+            AuditAction.UPLOADED,
+            performedBy,
+            buildDocumentCreatedDetails(savedDocument)
+        ));
+
+        return medicalDocumentMapper.toResponse(savedDocument);
+    }
+
+    @Transactional(readOnly = true)
+    public MedicalDocumentResponse getDocumentById(@NotNull UUID documentId) {
+        return medicalDocumentMapper.toResponse(findDocumentById(documentId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<MedicalDocumentResponse> listDocumentsForPatient(@NotNull UUID patientId) {
+        findPatientById(patientId);
+
+        return medicalDocumentRepository.findAllByPatientIdOrderByUploadedAtDesc(patientId).stream()
+            .map(medicalDocumentMapper::toResponse)
+            .toList();
+    }
+
+    public MedicalDocumentResponse changeDocumentStatus(
+        @NotNull UUID documentId,
+        @NotNull DocumentStatus status,
+        @NotBlank String performedBy
+    ) {
+        MedicalDocument medicalDocument = findDocumentById(documentId);
+        DocumentStatus previousStatus = medicalDocument.getStatus();
+
+        if (previousStatus == status) {
+            return medicalDocumentMapper.toResponse(medicalDocument);
+        }
+
+        medicalDocument.setStatus(status);
+        MedicalDocument savedDocument = medicalDocumentRepository.save(medicalDocument);
+
+        auditApplicationService.recordAuditEvent(new AuditEventCreateRequest(
+            AuditEntityType.MEDICAL_DOCUMENT,
+            savedDocument.getId(),
+            resolveStatusChangeAction(status),
+            performedBy,
+            buildDocumentStatusChangedDetails(savedDocument, previousStatus)
+        ));
+
+        return medicalDocumentMapper.toResponse(savedDocument);
+    }
+
+    private Patient findPatientById(UUID patientId) {
+        return patientRepository.findById(patientId)
+            .orElseThrow(() -> new PatientNotFoundException(patientId));
+    }
+
+    private MedicalDocument findDocumentById(UUID documentId) {
+        return medicalDocumentRepository.findById(documentId)
+            .orElseThrow(() -> new MedicalDocumentNotFoundException(documentId));
+    }
+
+    private void validateStoragePathIsAvailable(String storagePath) {
+        if (medicalDocumentRepository.existsByStoragePath(storagePath.trim())) {
+            throw new DuplicateDocumentStoragePathException(storagePath);
+        }
+    }
+
+    private AuditAction resolveStatusChangeAction(DocumentStatus status) {
+        if (status == DocumentStatus.ARCHIVED) {
+            return AuditAction.ARCHIVED;
+        }
+
+        return AuditAction.STATUS_CHANGED;
+    }
+
+    private ObjectNode buildDocumentCreatedDetails(MedicalDocument medicalDocument) {
+        ObjectNode details = objectMapper.createObjectNode();
+        details.put("patientId", medicalDocument.getPatient().getId().toString());
+        details.put("documentType", medicalDocument.getDocumentType().name());
+        details.put("originalFileName", medicalDocument.getOriginalFileName());
+        return details;
+    }
+
+    private ObjectNode buildDocumentStatusChangedDetails(
+        MedicalDocument medicalDocument,
+        DocumentStatus previousStatus
+    ) {
+        ObjectNode details = objectMapper.createObjectNode();
+        details.put("patientId", medicalDocument.getPatient().getId().toString());
+        details.put("fromStatus", previousStatus.name());
+        details.put("toStatus", medicalDocument.getStatus().name());
+        return details;
+    }
+}
