@@ -34,4 +34,8 @@ springdoc:
 
 mediassist:
   storage:
-    documents-root: ${DOCUMENT_STORAGE_ROOT:/var/lib/mediassist/documents}
+    documents-root: ${DOCUMENT_STORAGE_ROOT:./storage/documents}
+    allowed-extensions:
+      - pdf
+    allowed-content-types:
+      - application/pdf

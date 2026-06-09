@@ -2,6 +2,9 @@ package com.mediassist.platform.shared.exception;
 
 import com.mediassist.platform.document.application.DuplicateDocumentStoragePathException;
 import com.mediassist.platform.document.application.MedicalDocumentNotFoundException;
+import com.mediassist.platform.document.application.storage.DocumentStorageOperationException;
+import com.mediassist.platform.document.application.storage.InvalidDocumentFileException;
+import com.mediassist.platform.document.application.storage.StoredDocumentNotFoundException;
 import com.mediassist.platform.patient.application.DuplicatePatientMrnException;
 import com.mediassist.platform.patient.application.PatientNotFoundException;
 import com.mediassist.platform.shared.api.ApiErrorResponse;
@@ -20,6 +23,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @RestControllerAdvice
@@ -62,6 +68,48 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InvalidDocumentFileException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidDocumentFile(
+        InvalidDocumentFileException exception,
+        HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid Document File", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(StoredDocumentNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleStoredDocumentNotFound(
+        StoredDocumentNotFoundException exception,
+        HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Stored Document Not Found", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(DocumentStorageOperationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDocumentStorageOperation(
+        DocumentStorageOperationException exception,
+        HttpServletRequest request
+    ) {
+        return buildErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Document Storage Error",
+            exception.getMessage(),
+            request
+        );
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceeded(
+        MaxUploadSizeExceededException exception,
+        HttpServletRequest request
+    ) {
+        return buildErrorResponse(
+            HttpStatus.PAYLOAD_TOO_LARGE,
+            "Payload Too Large",
+            "Uploaded file exceeds the configured maximum size",
+            request
+        );
+    }
+
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ApiErrorResponse> handleHandlerMethodValidationException(
         HandlerMethodValidationException exception,
@@ -81,14 +129,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         String message = "Invalid value for parameter '" + exception.getName() + "'";
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation Failed", message, request);
-    }
-
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(
-        HttpMessageNotReadableException exception,
-        HttpServletRequest request
-    ) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation Failed", "Malformed request body", request);
     }
 
     @Override
@@ -116,9 +156,58 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
+    @Override
+    protected ResponseEntity<Object> handleMissingServletRequestPart(
+        MissingServletRequestPartException exception,
+        HttpHeaders headers,
+        HttpStatusCode status,
+        org.springframework.web.context.request.WebRequest webRequest
+    ) {
+        return buildBadRequestResponse("Validation Failed", exception.getMessage(), webRequest);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMissingServletRequestParameter(
+        MissingServletRequestParameterException exception,
+        HttpHeaders headers,
+        HttpStatusCode status,
+        org.springframework.web.context.request.WebRequest webRequest
+    ) {
+        return buildBadRequestResponse("Validation Failed", exception.getMessage(), webRequest);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(
+        HttpMessageNotReadableException exception,
+        HttpHeaders headers,
+        HttpStatusCode status,
+        org.springframework.web.context.request.WebRequest webRequest
+    ) {
+        return buildBadRequestResponse("Validation Failed", "Malformed request body", webRequest);
+    }
+
     private String formatFieldError(FieldError fieldError) {
         String defaultMessage = fieldError.getDefaultMessage() != null ? fieldError.getDefaultMessage() : "is invalid";
         return fieldError.getField() + " " + defaultMessage;
+    }
+
+    private ResponseEntity<Object> buildBadRequestResponse(
+        String error,
+        String message,
+        org.springframework.web.context.request.WebRequest webRequest
+    ) {
+        HttpServletRequest request = (HttpServletRequest) webRequest.resolveReference(
+            org.springframework.web.context.request.WebRequest.REFERENCE_REQUEST
+        );
+        ApiErrorResponse body = new ApiErrorResponse(
+            OffsetDateTime.now(ZoneOffset.UTC),
+            HttpStatus.BAD_REQUEST.value(),
+            error,
+            message,
+            request != null ? request.getRequestURI() : ""
+        );
+
+        return ResponseEntity.badRequest().body(body);
     }
 
     private ResponseEntity<ApiErrorResponse> buildErrorResponse(

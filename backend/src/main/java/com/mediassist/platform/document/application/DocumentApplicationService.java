@@ -8,7 +8,11 @@ import com.mediassist.platform.audit.domain.AuditAction;
 import com.mediassist.platform.audit.domain.AuditEntityType;
 import com.mediassist.platform.document.api.dto.MedicalDocumentResponse;
 import com.mediassist.platform.document.api.dto.MedicalDocumentUploadRequest;
+import com.mediassist.platform.document.application.storage.DocumentStorageException;
+import com.mediassist.platform.document.application.storage.DocumentStorageService;
+import com.mediassist.platform.document.application.storage.StoredDocumentResource;
 import com.mediassist.platform.document.domain.DocumentStatus;
+import com.mediassist.platform.document.domain.DocumentType;
 import com.mediassist.platform.document.domain.MedicalDocument;
 import com.mediassist.platform.document.domain.MedicalDocumentRepository;
 import com.mediassist.platform.patient.application.PatientNotFoundException;
@@ -21,19 +25,25 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Validated
 @Transactional
 public class DocumentApplicationService {
 
+    private static final Logger log = LoggerFactory.getLogger(DocumentApplicationService.class);
+
     private final MedicalDocumentRepository medicalDocumentRepository;
     private final PatientRepository patientRepository;
     private final MedicalDocumentMapper medicalDocumentMapper;
     private final AuditApplicationService auditApplicationService;
+    private final DocumentStorageService documentStorageService;
     private final ObjectMapper objectMapper;
 
     public DocumentApplicationService(
@@ -41,13 +51,36 @@ public class DocumentApplicationService {
         PatientRepository patientRepository,
         MedicalDocumentMapper medicalDocumentMapper,
         AuditApplicationService auditApplicationService,
+        DocumentStorageService documentStorageService,
         ObjectMapper objectMapper
     ) {
         this.medicalDocumentRepository = medicalDocumentRepository;
         this.patientRepository = patientRepository;
         this.medicalDocumentMapper = medicalDocumentMapper;
         this.auditApplicationService = auditApplicationService;
+        this.documentStorageService = documentStorageService;
         this.objectMapper = objectMapper;
+    }
+
+    public MedicalDocumentResponse uploadDocument(
+        @NotNull UUID patientId,
+        @NotNull DocumentType documentType,
+        @NotNull MultipartFile file,
+        @NotBlank String performedBy
+    ) {
+        DocumentStorageDetails storageDetails = documentStorageService.store(file);
+
+        try {
+            return createDocumentMetadata(
+                patientId,
+                new MedicalDocumentUploadRequest(documentType, null, null),
+                storageDetails,
+                performedBy
+            );
+        } catch (RuntimeException exception) {
+            cleanupStoredDocument(storageDetails.storagePath(), exception);
+            throw exception;
+        }
     }
 
     public MedicalDocumentResponse createDocumentMetadata(
@@ -82,6 +115,19 @@ public class DocumentApplicationService {
     @Transactional(readOnly = true)
     public MedicalDocumentResponse getDocumentById(@NotNull UUID documentId) {
         return medicalDocumentMapper.toResponse(findDocumentById(documentId));
+    }
+
+    @Transactional(readOnly = true)
+    public DownloadedDocument downloadDocument(@NotNull UUID documentId) {
+        MedicalDocument medicalDocument = findDocumentById(documentId);
+        StoredDocumentResource storedDocumentResource = documentStorageService.load(medicalDocument.getStoragePath());
+
+        return new DownloadedDocument(
+            medicalDocument.getOriginalFileName(),
+            medicalDocument.getMimeType(),
+            storedDocumentResource.contentLength(),
+            storedDocumentResource.resource()
+        );
     }
 
     @Transactional(readOnly = true)
@@ -141,6 +187,15 @@ public class DocumentApplicationService {
         }
 
         return AuditAction.STATUS_CHANGED;
+    }
+
+    private void cleanupStoredDocument(String storagePath, RuntimeException originalException) {
+        try {
+            documentStorageService.delete(storagePath);
+        } catch (DocumentStorageException cleanupException) {
+            originalException.addSuppressed(cleanupException);
+            log.warn("Failed to clean up stored document at path {}", storagePath, cleanupException);
+        }
     }
 
     private ObjectNode buildDocumentCreatedDetails(MedicalDocument medicalDocument) {
