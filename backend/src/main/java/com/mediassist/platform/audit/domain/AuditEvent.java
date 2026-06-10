@@ -11,7 +11,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
+
+import java.time.LocalDateTime;
+
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -62,5 +64,5 @@ public class AuditEvent {
 
     @CreatedDate
     @Column(name = "occurred_at", nullable = false, updatable = false)
-    private OffsetDateTime occurredAt;
+    private LocalDateTime occurredAt;
 }

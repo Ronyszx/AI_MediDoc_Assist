@@ -15,7 +15,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -81,11 +81,11 @@ public class Patient {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY)
     private Set<MedicalDocument> documents = new LinkedHashSet<>();

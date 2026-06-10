@@ -3,7 +3,7 @@ package com.mediassist.platform.document.api.dto;
 import com.mediassist.platform.document.domain.DocumentStatus;
 import com.mediassist.platform.document.domain.DocumentType;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record MedicalDocumentResponse(
@@ -16,8 +16,8 @@ public record MedicalDocumentResponse(
     DocumentStatus status,
     LocalDate documentDate,
     String description,
-    OffsetDateTime uploadedAt,
-    OffsetDateTime createdAt,
-    OffsetDateTime updatedAt
+    LocalDateTime uploadedAt,
+    LocalDateTime createdAt,
+    LocalDateTime updatedAt
 ) {
 }

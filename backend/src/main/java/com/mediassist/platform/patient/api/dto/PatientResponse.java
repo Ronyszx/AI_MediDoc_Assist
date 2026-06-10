@@ -3,7 +3,7 @@ package com.mediassist.platform.patient.api.dto;
 import com.mediassist.platform.patient.domain.Gender;
 import com.mediassist.platform.patient.domain.PatientStatus;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record PatientResponse(
@@ -16,7 +16,7 @@ public record PatientResponse(
     String phone,
     String email,
     PatientStatus status,
-    OffsetDateTime createdAt,
-    OffsetDateTime updatedAt
+    LocalDateTime createdAt,
+    LocalDateTime updatedAt
 ) {
 }

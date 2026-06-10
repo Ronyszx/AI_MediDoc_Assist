@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.ForeignKey;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -95,13 +95,13 @@ public class MedicalDocument {
     private String description;
 
     @Column(name = "uploaded_at", nullable = false)
-    private OffsetDateTime uploadedAt;
+    private LocalDateTime uploadedAt;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 }

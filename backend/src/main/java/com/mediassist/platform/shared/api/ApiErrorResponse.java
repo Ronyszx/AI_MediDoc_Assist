@@ -1,12 +1,12 @@
 package com.mediassist.platform.shared.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Schema(name = "ApiErrorResponse", description = "Standard API error response")
 public record ApiErrorResponse(
     @Schema(example = "2026-06-07T10:15:30Z")
-    OffsetDateTime timestamp,
+    LocalDateTime timestamp,
 
     @Schema(example = "404")
     int status,

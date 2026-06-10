@@ -9,7 +9,7 @@ import com.mediassist.platform.patient.application.DuplicatePatientMrnException;
 import com.mediassist.platform.patient.application.PatientNotFoundException;
 import com.mediassist.platform.shared.api.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpHeaders;
@@ -146,7 +146,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 //            .collect(Collectors.joining("; "));
 //
 //        ApiErrorResponse body = new ApiErrorResponse(
-//            OffsetDateTime.now(ZoneOffset.UTC),
+//            LocalDateTime.now(ZoneOffset.UTC),
 //            HttpStatus.BAD_REQUEST.value(),
 //            "Validation Failed",
 //            message,
@@ -200,7 +200,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             org.springframework.web.context.request.WebRequest.REFERENCE_REQUEST
         );
         ApiErrorResponse body = new ApiErrorResponse(
-            OffsetDateTime.now(ZoneOffset.UTC),
+            LocalDateTime.now(ZoneOffset.UTC),
             HttpStatus.BAD_REQUEST.value(),
             error,
             message,
@@ -217,7 +217,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         HttpServletRequest request
     ) {
         ApiErrorResponse body = new ApiErrorResponse(
-            OffsetDateTime.now(ZoneOffset.UTC),
+            LocalDateTime.now(ZoneOffset.UTC),
             status.value(),
             error,
             message,

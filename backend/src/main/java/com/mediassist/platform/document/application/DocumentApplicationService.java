@@ -21,8 +21,7 @@ import com.mediassist.platform.patient.domain.PatientRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -97,7 +96,7 @@ public class DocumentApplicationService {
             request,
             storageDetails
         );
-        medicalDocument.setUploadedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        medicalDocument.setUploadedAt(LocalDateTime.now());
 
         MedicalDocument savedDocument = medicalDocumentRepository.save(medicalDocument);
 
