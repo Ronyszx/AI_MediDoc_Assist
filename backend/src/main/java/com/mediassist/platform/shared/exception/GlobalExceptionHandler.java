@@ -97,30 +97,30 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceeded(
-        MaxUploadSizeExceededException exception,
-        HttpServletRequest request
-    ) {
-        return buildErrorResponse(
-            HttpStatus.PAYLOAD_TOO_LARGE,
-            "Payload Too Large",
-            "Uploaded file exceeds the configured maximum size",
-            request
-        );
-    }
+//    @ExceptionHandler(MaxUploadSizeExceededException.class)
+//    public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceeded(
+//        MaxUploadSizeExceededException exception,
+//        HttpServletRequest request
+//    ) {
+//        return buildErrorResponse(
+//            HttpStatus.PAYLOAD_TOO_LARGE,
+//            "Payload Too Large",
+//            "Uploaded file exceeds the configured maximum size",
+//            request
+//        );
+//    }
 
-    @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<ApiErrorResponse> handleHandlerMethodValidationException(
-        HandlerMethodValidationException exception,
-        HttpServletRequest request
-    ) {
-        String message = exception.getAllErrors().stream()
-            .map(error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : error.toString())
-            .collect(Collectors.joining("; "));
-
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation Failed", message, request);
-    }
+//    @ExceptionHandler(HandlerMethodValidationException.class)
+//    public ResponseEntity<ApiErrorResponse> handleHandlerMethodValidationException(
+//        HandlerMethodValidationException exception,
+//        HttpServletRequest request
+//    ) {
+//        String message = exception.getAllErrors().stream()
+//            .map(error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : error.toString())
+//            .collect(Collectors.joining("; "));
+//
+//        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation Failed", message, request);
+//    }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(
@@ -131,30 +131,30 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation Failed", message, request);
     }
 
-    @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-        MethodArgumentNotValidException exception,
-        HttpHeaders headers,
-        HttpStatusCode status,
-        org.springframework.web.context.request.WebRequest webRequest
-    ) {
-        HttpServletRequest request = (HttpServletRequest) webRequest.resolveReference(
-            org.springframework.web.context.request.WebRequest.REFERENCE_REQUEST
-        );
-        String message = exception.getBindingResult().getFieldErrors().stream()
-            .map(this::formatFieldError)
-            .collect(Collectors.joining("; "));
-
-        ApiErrorResponse body = new ApiErrorResponse(
-            OffsetDateTime.now(ZoneOffset.UTC),
-            HttpStatus.BAD_REQUEST.value(),
-            "Validation Failed",
-            message,
-            request != null ? request.getRequestURI() : ""
-        );
-
-        return ResponseEntity.badRequest().body(body);
-    }
+//    @Override
+//    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+//        MethodArgumentNotValidException exception,
+//        HttpHeaders headers,
+//        HttpStatusCode status,
+//        org.springframework.web.context.request.WebRequest webRequest
+//    ) {
+//        HttpServletRequest request = (HttpServletRequest) webRequest.resolveReference(
+//            org.springframework.web.context.request.WebRequest.REFERENCE_REQUEST
+//        );
+//        String message = exception.getBindingResult().getFieldErrors().stream()
+//            .map(this::formatFieldError)
+//            .collect(Collectors.joining("; "));
+//
+//        ApiErrorResponse body = new ApiErrorResponse(
+//            OffsetDateTime.now(ZoneOffset.UTC),
+//            HttpStatus.BAD_REQUEST.value(),
+//            "Validation Failed",
+//            message,
+//            request != null ? request.getRequestURI() : ""
+//        );
+//
+//        return ResponseEntity.badRequest().body(body);
+//    }
 
     @Override
     protected ResponseEntity<Object> handleMissingServletRequestPart(
