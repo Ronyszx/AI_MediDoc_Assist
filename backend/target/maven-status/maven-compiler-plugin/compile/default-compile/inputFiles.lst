@@ -35,6 +35,7 @@
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/document/infrastructure/persistence/JpaMedicalDocumentRepository.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/document/infrastructure/storage/DocumentStorageProperties.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/document/infrastructure/storage/LocalFileSystemStorageService.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentextraction/domain/ExtractionStatus.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/patient/api/PatientController.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/patient/api/dto/PatientCreateRequest.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/patient/api/dto/PatientResponse.java
