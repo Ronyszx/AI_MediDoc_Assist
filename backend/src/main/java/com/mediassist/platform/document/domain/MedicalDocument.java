@@ -1,22 +1,19 @@
-package com.mediassist.platform.document.domain;
+package com.mediassist.platform.documentextraction.domain;
 
-import com.mediassist.platform.patient.domain.Patient;
+import com.mediassist.platform.document.domain.MedicalDocument;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import jakarta.persistence.ForeignKey;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -30,78 +27,44 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(
-    name = "medical_documents",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_medical_documents_storage_path", columnNames = "storage_path"),
-        @UniqueConstraint(name = "uk_medical_documents_stored_file_name", columnNames = "stored_file_name")
-    },
-    indexes = {
-        @Index(name = "idx_medical_documents_patient_uploaded", columnList = "patient_id, uploaded_at DESC"),
-        @Index(name = "idx_medical_documents_document_type", columnList = "document_type")
-    }
-)
+@Table(name = "document_extractions")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = "patient")
-public class MedicalDocument {
+@ToString(exclude = "document")
+public class DocumentExtraction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @EqualsAndHashCode.Include
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-        name = "patient_id",
-        nullable = false,
-        foreignKey = @ForeignKey(name = "fk_medical_documents_patient")
+            name = "document_id",
+            nullable = false,
+            unique = true,
+            foreignKey = @ForeignKey(name = "fk_document_extractions_document")
     )
-    private Patient patient;
-
-    @Column(name = "original_file_name", nullable = false, length = 255)
-    private String originalFileName;
-
-    @Column(name = "stored_file_name", nullable = false, length = 255)
-    private String storedFileName;
-
-    @Column(name = "mime_type", nullable = false, length = 120)
-    private String mimeType;
-
-    @Column(name = "file_size_bytes", nullable = false)
-    private long fileSizeBytes;
-
-    @Column(name = "checksum_sha256", nullable = false, length = 64)
-    private String checksumSha256;
-
-    @Column(name = "storage_path", nullable = false, length = 500)
-    private String storagePath;
+    private MedicalDocument document;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "document_type", nullable = false, length = 50)
-    private DocumentType documentType;
+    @Column(name = "extraction_status", nullable = false, length = 30)
+    private ExtractionStatus extractionStatus;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 30)
-    private DocumentStatus status;
+    @Column(name = "extracted_text", columnDefinition = "TEXT")
+    private String extractedText;
 
-    @Column(name = "document_date")
-    private LocalDate documentDate;
-
-    @Column(name = "description", length = 500)
-    private String description;
-
-    @Column(name = "uploaded_at", nullable = false)
-    private LocalDateTime uploadedAt;
+    @Column(name = "page_count")
+    private Integer pageCount;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }
