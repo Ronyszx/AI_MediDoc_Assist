@@ -8,6 +8,7 @@ com/mediassist/platform/patient/domain/Gender.class
 com/mediassist/platform/document/infrastructure/storage/LocalFileSystemStorageService$StorageTarget.class
 com/mediassist/platform/document/infrastructure/persistence/JpaMedicalDocumentRepository.class
 com/mediassist/platform/patient/api/dto/PatientStatusUpdateRequest.class
+com/mediassist/platform/documentextraction/domain/DocumentExtraction.class
 com/mediassist/platform/document/application/DownloadedDocument.class
 com/mediassist/platform/patient/application/PatientMapper.class
 com/mediassist/platform/audit/application/AuditEventMapper.class
