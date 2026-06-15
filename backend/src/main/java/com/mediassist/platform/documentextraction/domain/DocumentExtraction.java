@@ -43,10 +43,10 @@ public class DocumentExtraction {
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-            name = "document_id",
-            nullable = false,
-            unique = true,
-            foreignKey = @ForeignKey(name = "fk_document_extractions_document")
+        name = "document_id",
+        nullable = false,
+        unique = true,
+        foreignKey = @ForeignKey(name = "fk_document_extractions_document")
     )
     private MedicalDocument document;
 

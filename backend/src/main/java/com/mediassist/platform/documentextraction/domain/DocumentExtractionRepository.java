@@ -7,9 +7,7 @@ public interface DocumentExtractionRepository {
 
     DocumentExtraction save(DocumentExtraction extraction);
 
-    Optional<DocumentExtraction> findById(UUID id);
+    Optional<DocumentExtraction> findById(UUID extractionId);
 
     Optional<DocumentExtraction> findByDocumentId(UUID documentId);
-
-    boolean existsByDocumentId(UUID documentId);
 }

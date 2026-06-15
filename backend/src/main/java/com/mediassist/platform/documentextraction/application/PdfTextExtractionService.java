@@ -4,7 +4,5 @@ import java.nio.file.Path;
 
 public interface PdfTextExtractionService {
 
-    String extractText(Path pdfPath);
-
-    int getPageCount(Path pdfPath);
+    ExtractedPdfContent extract(Path pdfPath);
 }

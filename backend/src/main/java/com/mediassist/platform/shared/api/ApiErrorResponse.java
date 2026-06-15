@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 @Schema(name = "ApiErrorResponse", description = "Standard API error response")
 public record ApiErrorResponse(
-    @Schema(example = "2026-06-07T10:15:30Z")
+    @Schema(example = "2026-06-07T10:15:30")
     LocalDateTime timestamp,
 
     @Schema(example = "404")
