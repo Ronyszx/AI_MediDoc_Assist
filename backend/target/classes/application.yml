@@ -39,3 +39,6 @@ mediassist:
       - pdf
     allowed-content-types:
       - application/pdf
+  chunking:
+    max-chunk-size: ${DOCUMENT_CHUNK_MAX_SIZE:1000}
+    overlap-size: ${DOCUMENT_CHUNK_OVERLAP_SIZE:150}

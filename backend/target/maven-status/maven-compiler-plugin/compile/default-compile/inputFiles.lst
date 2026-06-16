@@ -8,6 +8,7 @@
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/audit/domain/AuditEvent.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/audit/domain/AuditEventRepository.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/audit/infrastructure/persistence/JpaAuditEventRepository.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/config/DocumentChunkingConfiguration.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/config/DocumentStorageConfiguration.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/config/JpaAuditingConfiguration.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/document/api/DocumentController.java
@@ -35,6 +36,18 @@
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/document/infrastructure/persistence/JpaMedicalDocumentRepository.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/document/infrastructure/storage/DocumentStorageProperties.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/document/infrastructure/storage/LocalFileSystemStorageService.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/api/DocumentChunkController.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/api/dto/DocumentChunkResponse.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/application/DocumentChunkApplicationService.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/application/DocumentChunkMapper.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/application/DocumentChunkingProcessingException.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/application/TextChunkingService.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/domain/ChunkStatus.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/domain/DocumentChunk.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/domain/DocumentChunkRepository.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/infrastructure/chunking/DefaultTextChunkingService.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/infrastructure/chunking/DocumentChunkingProperties.java
+/Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentchunk/infrastructure/persistence/JpaDocumentChunkRepository.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentextraction/api/DocumentExtractionController.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentextraction/api/dto/DocumentExtractionResponse.java
 /Users/rony/Desktop/AI MediDoc Assist/backend/src/main/java/com/mediassist/platform/documentextraction/api/dto/DocumentExtractionTextResponse.java

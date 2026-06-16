@@ -5,6 +5,7 @@ import com.mediassist.platform.document.application.MedicalDocumentNotFoundExcep
 import com.mediassist.platform.document.application.storage.DocumentStorageOperationException;
 import com.mediassist.platform.document.application.storage.InvalidDocumentFileException;
 import com.mediassist.platform.document.application.storage.StoredDocumentNotFoundException;
+import com.mediassist.platform.documentchunk.application.DocumentChunkingProcessingException;
 import com.mediassist.platform.documentextraction.application.DocumentExtractionNotCompletedException;
 import com.mediassist.platform.documentextraction.application.DocumentExtractionNotFoundException;
 import com.mediassist.platform.documentextraction.application.DocumentExtractionProcessingException;
@@ -124,6 +125,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         HttpServletRequest request
     ) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Document Extraction Failed", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(DocumentChunkingProcessingException.class)
+    public ResponseEntity<ApiErrorResponse> handleDocumentChunkingProcessing(
+        DocumentChunkingProcessingException exception,
+        HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Document Chunking Failed", exception.getMessage(), request);
     }
 
     @Override
