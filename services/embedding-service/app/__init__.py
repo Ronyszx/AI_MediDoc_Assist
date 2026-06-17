@@ -1,0 +1,1 @@
+"""MediAssist embedding service package."""
