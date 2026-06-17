@@ -42,3 +42,8 @@ mediassist:
   chunking:
     max-chunk-size: ${DOCUMENT_CHUNK_MAX_SIZE:1000}
     overlap-size: ${DOCUMENT_CHUNK_OVERLAP_SIZE:150}
+  embedding:
+    endpoint-url: ${EMBEDDING_SERVICE_URL:http://localhost:8001/api/v1/embeddings}
+    model-name: ${EMBEDDING_MODEL_NAME:BAAI/bge-m3}
+    dimensions: ${EMBEDDING_DIMENSIONS:1024}
+    batch-size: ${EMBEDDING_BATCH_SIZE:32}

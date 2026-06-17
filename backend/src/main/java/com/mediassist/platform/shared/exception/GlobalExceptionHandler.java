@@ -6,6 +6,9 @@ import com.mediassist.platform.document.application.storage.DocumentStorageOpera
 import com.mediassist.platform.document.application.storage.InvalidDocumentFileException;
 import com.mediassist.platform.document.application.storage.StoredDocumentNotFoundException;
 import com.mediassist.platform.documentchunk.application.DocumentChunkingProcessingException;
+import com.mediassist.platform.documentembedding.application.DocumentChunksNotFoundException;
+import com.mediassist.platform.documentembedding.application.DocumentEmbeddingProcessingException;
+import com.mediassist.platform.documentembedding.application.DocumentEmbeddingsNotFoundException;
 import com.mediassist.platform.documentextraction.application.DocumentExtractionNotCompletedException;
 import com.mediassist.platform.documentextraction.application.DocumentExtractionNotFoundException;
 import com.mediassist.platform.documentextraction.application.DocumentExtractionProcessingException;
@@ -133,6 +136,30 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         HttpServletRequest request
     ) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Document Chunking Failed", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(DocumentChunksNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleDocumentChunksNotFound(
+        DocumentChunksNotFoundException exception,
+        HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.CONFLICT, "Document Chunks Not Found", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(DocumentEmbeddingsNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleDocumentEmbeddingsNotFound(
+        DocumentEmbeddingsNotFoundException exception,
+        HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Document Embeddings Not Found", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(DocumentEmbeddingProcessingException.class)
+    public ResponseEntity<ApiErrorResponse> handleDocumentEmbeddingProcessing(
+        DocumentEmbeddingProcessingException exception,
+        HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Document Embedding Failed", exception.getMessage(), request);
     }
 
     @Override
