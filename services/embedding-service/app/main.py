@@ -1,8 +1,10 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, status
 import uvicorn
+from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from app.config import Settings, get_settings
 from app.embedding_model import EmbeddingInferenceError, EmbeddingModel, UnsupportedModelError
@@ -28,6 +30,24 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    body = await request.body()
+    body_text = body.decode("utf-8", errors="ignore")
+
+    logger.error(
+        "Validation error for path=%s body_preview=%s errors=%s",
+        request.url.path,
+        body_text[:2000],
+        exc.errors(),
+    )
+
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()},
+    )
 
 
 @app.get("/health", response_model=HealthResponse)

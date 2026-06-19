@@ -1,0 +1,41 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+services/embedding-service/.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment files / secrets
+.env
+*.env
+!.env.example
+
+# Java / Maven build output
+target/
+backend/target/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Local document storage / uploaded PDFs
+storage/
+backend/storage/
+
+# Node / frontend future
+node_modules/
+dist/
+
+# Hugging Face / model cache if created inside project
+.cache/
+huggingface/
+models/

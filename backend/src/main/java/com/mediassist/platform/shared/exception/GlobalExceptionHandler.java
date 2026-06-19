@@ -12,6 +12,9 @@ import com.mediassist.platform.documentembedding.application.DocumentEmbeddingsN
 import com.mediassist.platform.documentextraction.application.DocumentExtractionNotCompletedException;
 import com.mediassist.platform.documentextraction.application.DocumentExtractionNotFoundException;
 import com.mediassist.platform.documentextraction.application.DocumentExtractionProcessingException;
+import com.mediassist.platform.documentqa.application.LlmServiceUnavailableException;
+import com.mediassist.platform.documentqa.application.NoRelevantDocumentContextException;
+import com.mediassist.platform.documentqa.application.RagAnswerGenerationException;
 import com.mediassist.platform.patient.application.DuplicatePatientMrnException;
 import com.mediassist.platform.patient.application.PatientNotFoundException;
 import com.mediassist.platform.shared.api.ApiErrorResponse;
@@ -160,6 +163,30 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         HttpServletRequest request
     ) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Document Embedding Failed", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(NoRelevantDocumentContextException.class)
+    public ResponseEntity<ApiErrorResponse> handleNoRelevantDocumentContext(
+        NoRelevantDocumentContextException exception,
+        HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Relevant Document Context Not Found", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(LlmServiceUnavailableException.class)
+    public ResponseEntity<ApiErrorResponse> handleLlmServiceUnavailable(
+        LlmServiceUnavailableException exception,
+        HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, "LLM Service Unavailable", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(RagAnswerGenerationException.class)
+    public ResponseEntity<ApiErrorResponse> handleRagAnswerGeneration(
+        RagAnswerGenerationException exception,
+        HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "RAG Answer Generation Failed", exception.getMessage(), request);
     }
 
     @Override

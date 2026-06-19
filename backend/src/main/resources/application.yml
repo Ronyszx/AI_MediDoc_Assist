@@ -47,3 +47,8 @@ mediassist:
     model-name: ${EMBEDDING_MODEL_NAME:BAAI/bge-m3}
     dimensions: ${EMBEDDING_DIMENSIONS:1024}
     batch-size: ${EMBEDDING_BATCH_SIZE:32}
+  llm:
+    endpoint-url: ${LLM_SERVICE_URL:http://localhost:8002/api/v1/chat/completions}
+    model-name: ${LLM_MODEL_NAME:local-model-name}
+    temperature: ${LLM_TEMPERATURE:0.2}
+    max-output-tokens: ${LLM_MAX_OUTPUT_TOKENS:800}

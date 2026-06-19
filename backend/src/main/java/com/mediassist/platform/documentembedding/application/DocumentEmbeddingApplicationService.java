@@ -135,17 +135,7 @@ public class DocumentEmbeddingApplicationService {
         @NotNull @Valid SemanticSearchRequest request,
         @NotBlank String performedBy
     ) {
-        validateDocumentExists(documentId);
-        findChunksForDocument(documentId);
-        ensureDocumentHasEmbeddings(documentId);
-
-        EmbeddingResult queryEmbedding = embeddingService.embedQuery(request.query());
-        List<SemanticSearchMatch> matches = documentChunkEmbeddingRepository.searchSimilarChunks(
-            documentId,
-            queryEmbedding.modelName(),
-            queryEmbedding.embeddings().getFirst(),
-            request.topK()
-        );
+        List<SemanticSearchMatch> matches = searchSimilarChunks(documentId, request.query(), request.topK());
 
         recordAuditEvent(
             documentId,
@@ -156,11 +146,30 @@ public class DocumentEmbeddingApplicationService {
 
         return new SemanticSearchResponse(
             documentId,
-            queryEmbedding.modelName(),
+            embeddingService.modelName(),
             request.query(),
             matches.stream()
                 .map(documentEmbeddingMapper::toSearchMatchResponse)
-                .toList()
+            .toList()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<SemanticSearchMatch> searchSimilarChunks(
+        @NotNull UUID documentId,
+        @NotBlank String query,
+        int topK
+    ) {
+        validateDocumentExists(documentId);
+        findChunksForDocument(documentId);
+        ensureDocumentHasEmbeddings(documentId);
+
+        EmbeddingResult queryEmbedding = embeddingService.embedQuery(query);
+        return documentChunkEmbeddingRepository.searchSimilarChunks(
+            documentId,
+            queryEmbedding.modelName(),
+            queryEmbedding.embeddings().getFirst(),
+            topK
         );
     }
 
