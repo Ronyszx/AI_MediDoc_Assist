@@ -1,6 +1,10 @@
 # **AI_MediDoc_Assist: Complete Project Overview**
 
 ## **What is this project?**
+/////---Update---/////
+//Learning ways to implement Local LLM service///
+
+contd
 
 **AI_MediDoc_Assist** is a **healthcare document intelligence platform** that solves the problem of managing unstructured medical documents. Think of it as a "smart document reader" that can:
 
