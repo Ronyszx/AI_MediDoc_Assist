@@ -6,18 +6,24 @@ import com.mediassist.platform.documentqa.application.LlmCompletionResponse;
 import com.mediassist.platform.documentqa.application.LlmMessage;
 import com.mediassist.platform.documentqa.application.LlmServiceUnavailableException;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 @Component
+@ConditionalOnProperty(prefix = "mediassist.llm", name = "provider", havingValue = "http")
 public class HttpLlmClient implements LlmClient {
 
     private final RestClient restClient;
     private final DocumentQaProperties properties;
 
-    public HttpLlmClient(RestClient.Builder restClientBuilder, DocumentQaProperties properties) {
-        this.restClient = restClientBuilder.build();
+    public HttpLlmClient(
+        @Qualifier("documentQaRestClient") RestClient restClient,
+        DocumentQaProperties properties
+    ) {
+        this.restClient = restClient;
         this.properties = properties;
     }
 

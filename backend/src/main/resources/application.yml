@@ -48,7 +48,11 @@ mediassist:
     dimensions: ${EMBEDDING_DIMENSIONS:1024}
     batch-size: ${EMBEDDING_BATCH_SIZE:32}
   llm:
-    endpoint-url: ${LLM_SERVICE_URL:http://localhost:8002/api/v1/chat/completions}
-    model-name: ${LLM_MODEL_NAME:local-model-name}
+    provider: ${LLM_PROVIDER:ollama}
+    endpoint-url: ${LLM_SERVICE_URL:http://localhost:11434/api/chat}
+    model-name: ${LLM_MODEL_NAME:qwen3.5:4b}
     temperature: ${LLM_TEMPERATURE:0.2}
     max-output-tokens: ${LLM_MAX_OUTPUT_TOKENS:800}
+    context-window-tokens: ${LLM_CONTEXT_WINDOW_TOKENS:8192}
+    connect-timeout: ${LLM_CONNECT_TIMEOUT:5s}
+    read-timeout: ${LLM_READ_TIMEOUT:120s}

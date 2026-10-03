@@ -5,7 +5,7 @@ package com.mediassist.platform.documentembedding.infrastructure.client;
 ////    public EmbeddingClientException(String message) {
 ////        super(message);
 ////    }
-////}
+//}
 
     public class EmbeddingClientException extends RuntimeException {
 
