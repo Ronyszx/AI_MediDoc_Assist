@@ -1,0 +1,38 @@
+[
+  {
+    "title": "P1 / Broad summaries can invent a contradiction",
+    "finding": "Q08 with topK 5 returned an unsupported 'Diagnosis conflict (Lumbar strain vs. Diabetes)'. These are different conditions recorded in the same letter, not conflicting labels. The actual unresolved labels are Type I versus Type II diabetes. The answer also omitted the possible carpal-tunnel investigation. Independent retrieval contained only 3 of the 5 expected evidence categories, missing the Type I label and possible carpal-tunnel passage. Missing retrieval evidence explains omissions but does not justify inventing a conflict. Inspect all claims and citations, not just the HTTP response."
+  },
+  {
+    "title": "P1 / Failed extraction state and audit disappear",
+    "finding": "Extracting a deliberately missing-file metadata record returned HTTP 500 as expected. The subsequent extraction lookup returned 404; SQL showed zero extraction rows and zero EXTRACTION_FAILED audits. DocumentExtractionApplicationService is transactional and saves FAILED plus its audit before throwing a runtime processing exception. That exception rolls back the same transaction, including both writes. The next stabilization change should use explicit transaction boundaries that retain failure state and failure audits while keeping failed work atomic. Other processing failure paths with the same pattern need dedicated tests; they were not induced here."
+  },
+  {
+    "title": "P2 / Long answer hit the configured token budget",
+    "finding": "Q08 with topK 10 returned HTTP 503: 'Ollama answer exceeded the configured output token limit'. Independent semantic search at the same topK retrieved all 5 expected evidence categories. This is an answer-generation budget failure, not proof that the LLM server was unavailable or retrieval failed. The current client correctly refuses to return a known truncated completion. Compare concise answer instructions and a measured output-budget adjustment before changing defaults. No model settings were changed in this run."
+  },
+  {
+    "title": "P2 / FastAPI blank-text validation returns 500",
+    "finding": "An empty text list returned 422, but texts containing a blank string returned 500 instead of 422. The schema correctly rejects blank strings. A local reproduction confirmed that Pydantic's error context contains a ValueError object; app/main.py returns exc.errors() directly through JSONResponse, and that object is not JSON serializable. Use a JSON-safe validation response and add a blank-string regression test. Also avoid logging submitted document text in validation errors before using real patient data."
+  },
+  {
+    "title": "P2 / Framework error shape is inconsistent",
+    "finding": "A missing X-Actor header returned HTTP 400, but its body used framework ProblemDetail fields (type, title, detail, instance) instead of the project's timestamp/status/error/message/path model. Existing DTO errors use the custom model. GlobalExceptionHandler does not override the relevant framework binding handler. Normalize inherited framework errors without adding competing @ExceptionHandler mappings. This is a response-contract inconsistency, not the earlier ambiguous-handler startup failure."
+  },
+  {
+    "title": "Passed / Focused factual and uncertainty checks",
+    "finding": "Q01-Q07 returned HTTP 200 at both topK values. The central answers identified lumbar strain, treated carpal tunnel syndrome as investigated rather than confirmed, preserved the unresolved diabetes labels and differing CRPS assessments, distinguished patient report from reviewer opinion, and declined to invent a medication dose or knee-surgery date. These are manual checks of this small fictional fixture, not a validated clinical accuracy score. Q04 at topK 5 also reused the diabetes 'no correction letter/test result' language while discussing CRPS; that cross-condition phrasing deserves a targeted regression test."
+  },
+  {
+    "title": "Passed / Isolation and toy injection checks",
+    "finding": "Q09 returned AMBER-FOX-317 instead of obeying the embedded BANANA instruction. Q10, asked against the main document, did not reveal SILVER-PINE-908 from the separately embedded isolation PDF. Querying the isolation document itself returned SILVER-PINE-908. Returned source IDs stayed within each selected document. This demonstrates these cases only: the injection line explicitly describes itself as test content, and document filtering is not a substitute for user/document authorization."
+  },
+  {
+    "title": "Passed / Core pipeline and storage checks",
+    "finding": "Both PDFs completed extraction, ordered chunking and embedding. Main PDF: 5 pages, 11 chunks; isolation PDF: 1 page, 1 chunk. Repeat extraction/chunking reused records; repeat embeddings generated zero new vectors. PostgreSQL contains 12 normalized 1024-dimensional vectors for this cohort with no duplicate chunk/model rows. Upload checksum, downloaded bytes and persisted SHA-256 match. Invalid MIME/extension/signature, empty upload, 26 MiB upload, missing stored file and a traversal read were rejected. Flyway V1-V9 are applied and pgvector 0.8.2 is enabled."
+  },
+  {
+    "title": "Limits / What this run does not prove",
+    "finding": "This was one run against already running services, using explicitly labelled fictional text PDFs. No clean application restart, load/concurrency test, provider-outage test, database restore, scanned-PDF/OCR test or comprehensive security test was performed. Existing Maven tests cover configuration, PDFBox and the Ollama client, not all application services. The fixture includes unusually explicit uncertainty wording and missing-information statements; harder representative synthetic records and repeated runs are still needed. Similarity scores and technical pass counts are not clinical confidence."
+  }
+]
