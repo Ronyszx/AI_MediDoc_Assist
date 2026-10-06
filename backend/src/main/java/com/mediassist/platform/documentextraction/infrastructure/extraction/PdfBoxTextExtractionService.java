@@ -12,10 +12,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class PdfBoxTextExtractionService implements PdfTextExtractionService {
 
+    private final PdfTextExtractionProperties properties;
+
+    public PdfBoxTextExtractionService(PdfTextExtractionProperties properties) {
+        this.properties = properties;
+    }
+
     @Override
     public ExtractedPdfContent extract(Path pdfPath) {
         try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
             PDFTextStripper pdfTextStripper = new PDFTextStripper();
+            // Retain detected paragraph and page breaks for downstream chunking.
+            pdfTextStripper.setDropThreshold(properties.getParagraphDropThreshold());
+            pdfTextStripper.setParagraphEnd("\n\n");
+            pdfTextStripper.setPageEnd("\n\n");
             String extractedText = pdfTextStripper.getText(document);
             return new ExtractedPdfContent(extractedText, document.getNumberOfPages());
         } catch (IOException exception) {

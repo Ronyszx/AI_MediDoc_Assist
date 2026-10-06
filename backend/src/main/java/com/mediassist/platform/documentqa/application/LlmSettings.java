@@ -7,4 +7,6 @@ public interface LlmSettings {
     double getTemperature();
 
     int getMaxOutputTokens();
+
+    int getContextWindowTokens();
 }

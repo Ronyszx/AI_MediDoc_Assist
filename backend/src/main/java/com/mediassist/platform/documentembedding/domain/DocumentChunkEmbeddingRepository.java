@@ -19,4 +19,11 @@ public interface DocumentChunkEmbeddingRepository {
         List<Double> queryEmbedding,
         int topK
     );
+
+    List<SemanticSearchCandidate> searchSimilarChunkCandidates(
+        UUID documentId,
+        String modelName,
+        List<Double> queryEmbedding,
+        int candidateCount
+    );
 }

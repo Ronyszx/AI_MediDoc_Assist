@@ -12,6 +12,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import com.mediassist.platform.documentqa.application.LlmCompletionRequest;
 import com.mediassist.platform.documentqa.application.LlmCompletionResponse;
 import com.mediassist.platform.documentqa.application.LlmMessage;
+import com.mediassist.platform.documentqa.application.LlmResponseFormat;
 import com.mediassist.platform.documentqa.application.LlmServiceUnavailableException;
 import java.io.IOException;
 import java.util.List;
@@ -48,6 +49,7 @@ class OllamaLlmClientTest {
             .andExpect(jsonPath("$.messages[1].content").value("Summarize the supplied context."))
             .andExpect(jsonPath("$.stream").value(false))
             .andExpect(jsonPath("$.think").value(false))
+            .andExpect(jsonPath("$.format").doesNotExist())
             .andExpect(jsonPath("$.options.temperature").value(0.2))
             .andExpect(jsonPath("$.options.num_predict").value(800))
             .andExpect(jsonPath("$.options.num_ctx").value(4096))
@@ -135,5 +137,20 @@ class OllamaLlmClientTest {
             0.2,
             800
         );
+    }
+
+    @Test
+    void shouldRequestJsonOnlyForStructuredCompletions() {
+        server.expect(requestTo(properties.getEndpointUrl()))
+            .andExpect(jsonPath("$.format").value("json"))
+            .andExpect(jsonPath("$.options.num_predict").value(512))
+            .andRespond(withSuccess("""
+                {"message":{"content":"{\\"facets\\":[]}"},"done":true}
+                """, MediaType.APPLICATION_JSON));
+        var request = completionRequest();
+        var completion = client.complete(new LlmCompletionRequest(request.modelName(), request.messages(),
+            0, 512, LlmResponseFormat.JSON));
+        assertThat(completion.content()).isEqualTo("{\"facets\":[]}");
+        server.verify();
     }
 }
