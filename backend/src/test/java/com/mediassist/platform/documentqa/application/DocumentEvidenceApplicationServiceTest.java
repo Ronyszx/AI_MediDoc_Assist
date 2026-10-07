@@ -24,7 +24,8 @@ class DocumentEvidenceApplicationServiceTest {
     private final DocumentEvidenceExtractor extractor = mock(DocumentEvidenceExtractor.class);
     private final DocumentEvidenceApplicationService service = new DocumentEvidenceApplicationService(
         new DocumentEvidenceContextBuilder(new DocumentEvidencePromptBuilder(new ObjectMapper(), settings), settings, llmSettings),
-        extractor, new DocumentEvidenceValidator(), new DocumentEvidenceAnswerRenderer(settings));
+        new DocumentEvidenceSelectionService(extractor, mock(DocumentEvidenceScorer.class), settings),
+        new DocumentEvidenceValidator(), new DocumentEvidenceAnswerRenderer(settings));
 
     @Test
     void shouldRenderOnlyTheSelectedCompleteParagraphWithItsSourcePosition() {
@@ -70,6 +71,15 @@ class DocumentEvidenceApplicationServiceTest {
             .thenThrow(new LlmServiceUnavailableException("Unavailable"));
         assertThatThrownBy(() -> service.generateAnswer("Question", List.of(source("Evidence."))))
             .isInstanceOf(LlmServiceUnavailableException.class);
+    }
+
+    @Test
+    void shouldExposeSelectionLimitsEvenWhenTheFullCatalogAndQuoteFit() {
+        when(extractor.selectEvidence(eq("Question"), anyList()))
+            .thenReturn(new DocumentEvidenceSelection("model", List.of("P1"), true));
+        var answer = service.generateAnswer("Question", List.of(source("Supporting statement.")));
+        assertThat(answer.contextLimited()).isTrue();
+        assertThat(answer.content()).contains("Some evidence was omitted because of context or response limits");
     }
 
     private SemanticSearchMatch source(String text) {

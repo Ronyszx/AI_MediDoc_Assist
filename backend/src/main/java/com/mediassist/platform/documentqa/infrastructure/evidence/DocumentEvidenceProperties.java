@@ -14,6 +14,9 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "mediassist.qa.evidence")
 public class DocumentEvidenceProperties implements DocumentEvidenceSettings {
     private boolean enabled = false;
+    private boolean batchSelectionEnabled = false;
+    @Min(4) @Max(16)
+    private int selectionBatchSize = 8;
     @Min(1) @Max(20)
     private int maxItems = 12;
     @Min(1) @Max(100)

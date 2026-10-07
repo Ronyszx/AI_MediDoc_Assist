@@ -52,6 +52,8 @@ mediassist:
   qa:
     evidence:
       enabled: ${QA_EVIDENCE_ENABLED:false}
+      batch-selection-enabled: ${QA_EVIDENCE_BATCH_SELECTION_ENABLED:false}
+      selection-batch-size: ${QA_EVIDENCE_SELECTION_BATCH_SIZE:8}
       max-items: ${QA_EVIDENCE_MAX_ITEMS:12}
       max-passages: ${QA_EVIDENCE_MAX_PASSAGES:80}
       max-passage-characters: ${QA_EVIDENCE_MAX_PASSAGE_CHARACTERS:1200}

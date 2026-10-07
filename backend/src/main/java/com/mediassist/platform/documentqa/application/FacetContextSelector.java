@@ -41,6 +41,25 @@ public class FacetContextSelector {
                 }
             }
         }
+        List<SemanticSearchMatch> nominations = List.copyOf(selected);
+        fill(question, candidates, selected, topK);
+        if (selected.size() < Math.min(topK, candidates.size())) {
+            List<SemanticSearchMatch> packed = new ArrayList<>(nominations);
+            var compactCandidates = candidates.stream()
+                .sorted(Comparator.comparingDouble(this::fusionScorePerToken).reversed()
+                    .thenComparing(Comparator.comparingDouble(RankedContextCandidate::fusionScore).reversed())
+                    .thenComparing(candidate -> candidate.match().chunkIndex())
+                    .thenComparing(candidate -> candidate.match().chunkId()))
+                .toList();
+            fill(question, compactCandidates, packed, topK);
+            if (packed.size() >= selected.size()) {
+                return List.copyOf(packed);
+            }
+        }
+        return List.copyOf(selected);
+    }
+
+    private void fill(String question, List<RankedContextCandidate> candidates, List<SemanticSearchMatch> selected, int topK) {
         for (RankedContextCandidate candidate : candidates) {
             if (selected.size() >= topK) {
                 break;
@@ -49,7 +68,11 @@ public class FacetContextSelector {
                 selected.add(candidate.match());
             }
         }
-        return List.copyOf(selected);
+    }
+
+    private double fusionScorePerToken(RankedContextCandidate candidate) {
+        // A packing heuristic for ranked context, not a measure of clinical importance.
+        return candidate.fusionScore() / Math.max(1, estimateTokens(candidate.match().chunkText()));
     }
 
     private boolean fits(String question, List<SemanticSearchMatch> selected, SemanticSearchMatch next) {

@@ -42,7 +42,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @EnabledIfEnvironmentVariable(named = "MEDIASSIST_QA_EVIDENCE_EVALUATION", matches = "true")
-@SpringBootTest(properties = {"mediassist.qa.evidence.enabled=true", "mediassist.qa.facets.enabled=false",
+@SpringBootTest(properties = {"mediassist.qa.evidence.enabled=true", "mediassist.qa.evidence.batch-selection-enabled=false", "mediassist.qa.facets.enabled=false",
     "mediassist.qa.retrieval.diversity-enabled=false"})
 @Import(DocumentEvidenceLiveTest.RecordingConfiguration.class)
 class DocumentEvidenceLiveTest {

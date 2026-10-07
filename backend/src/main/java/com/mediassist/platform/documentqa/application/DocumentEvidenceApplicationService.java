@@ -11,14 +11,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class DocumentEvidenceApplicationService {
     private final DocumentEvidenceContextBuilder contextBuilder;
-    private final DocumentEvidenceExtractor extractor;
+    private final DocumentEvidenceSelectionService selectionService;
     private final DocumentEvidenceValidator validator;
     private final DocumentEvidenceAnswerRenderer renderer;
 
-    public DocumentEvidenceApplicationService(DocumentEvidenceContextBuilder contextBuilder, DocumentEvidenceExtractor extractor,
+    public DocumentEvidenceApplicationService(DocumentEvidenceContextBuilder contextBuilder, DocumentEvidenceSelectionService selectionService,
                                               DocumentEvidenceValidator validator, DocumentEvidenceAnswerRenderer renderer) {
         this.contextBuilder = contextBuilder;
-        this.extractor = extractor;
+        this.selectionService = selectionService;
         this.validator = validator;
         this.renderer = renderer;
     }
@@ -28,8 +28,8 @@ public class DocumentEvidenceApplicationService {
         if (context.passages().isEmpty()) {
             throw new DocumentEvidenceException("No complete evidence passage fits the context budget");
         }
-        DocumentEvidenceSelection selection = extractor.selectEvidence(question, context.passages());
+        DocumentEvidenceSelection selection = selectionService.selectEvidence(question, context.passages());
         List<DocumentEvidenceItem> evidence = validator.resolveAndValidate(selection.passageIds(), context.passages(), matches);
-        return renderer.render(selection.modelName(), evidence, context.limited());
+        return renderer.render(selection.modelName(), evidence, context.limited() || selection.limited());
     }
 }

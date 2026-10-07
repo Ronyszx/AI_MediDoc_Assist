@@ -56,6 +56,40 @@ class FacetContextSelectorTest {
         assertThatThrownBy(() -> selector.select("Compare", List.of(), 0, 11)).isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void shouldRepackOnlyWhenTheEvidenceBudgetPreventsFillingTopK() {
+        settings.setMaxEvidenceTokens(256);
+        var nomination = candidate(0, "n".repeat(80), Map.of(1, 1));
+        var longFiller = scoredCandidate(1, "l".repeat(350), 0.2);
+        var compactOne = scoredCandidate(2, "a".repeat(160), 0.15);
+        var compactTwo = scoredCandidate(3, "b".repeat(160), 0.14);
+
+        assertThat(selector.select("Compare", List.of(nomination, longFiller, compactOne, compactTwo), 1, 3))
+            .containsExactly(nomination.match(), compactOne.match(), compactTwo.match());
+    }
+
+    @Test
+    void shouldPreserveFusionOrderWhenTheRequestedContextAlreadyFits() {
+        var high = scoredCandidate(0, "x".repeat(350), 0.2);
+        var shortLower = scoredCandidate(1, "Short", 0.1);
+        assertThat(selector.select("Question", List.of(high, shortLower), 0, 2))
+            .containsExactly(high.match(), shortLower.match());
+    }
+
+    @Test
+    void shouldKeepFacetNominationsEvenWhenAnotherChunkHasHigherPackingDensity() {
+        settings.setMaxEvidenceTokens(256);
+        var nomination = candidate(0, "n".repeat(400), Map.of(1, 1));
+        var compact = scoredCandidate(1, "a".repeat(160), 1.0);
+        assertThat(selector.select("Compare", List.of(nomination, compact), 1, 2))
+            .containsExactly(nomination.match());
+    }
+
+    private RankedContextCandidate scoredCandidate(int index, String text, double score) {
+        var match = new SemanticSearchMatch(UUID.randomUUID(), index, text, 0.7, "model");
+        return new RankedContextCandidate(match, score, Map.of(0, index + 1));
+    }
+
     private RankedContextCandidate candidate(int index, String text, Map<Integer, Integer> ranks) {
         return new RankedContextCandidate(new SemanticSearchMatch(UUID.randomUUID(), index, text, 0.7, "model"), 0.1, ranks);
     }

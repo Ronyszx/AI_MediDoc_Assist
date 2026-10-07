@@ -41,7 +41,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @EnabledIfEnvironmentVariable(named = "MEDIASSIST_QA_LIVE_EVALUATION", matches = "true")
-@SpringBootTest(properties = {"mediassist.qa.facets.enabled=true", "mediassist.qa.retrieval.diversity-enabled=false"})
+@SpringBootTest(properties = {"mediassist.qa.facets.enabled=true", "mediassist.qa.retrieval.diversity-enabled=false",
+    "mediassist.qa.evidence.enabled=false", "mediassist.qa.evidence.batch-selection-enabled=false"})
 @Import(DocumentQaReliabilityLiveTest.PlannerRecordingConfiguration.class)
 class DocumentQaReliabilityLiveTest {
     @Autowired private ObjectMapper mapper;
