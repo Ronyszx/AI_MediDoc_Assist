@@ -43,7 +43,7 @@ public class OllamaLlmClient implements LlmClient {
                     request.messages(),
                     false,
                     false,
-                    request.responseFormat() == LlmResponseFormat.JSON ? "json" : null,
+                    responseFormat(request),
                     new OllamaOptions(
                         request.temperature(),
                         request.maxOutputTokens(),
@@ -57,6 +57,13 @@ public class OllamaLlmClient implements LlmClient {
         } catch (RestClientException exception) {
             throw new LlmServiceUnavailableException("Ollama service is unavailable or returned an invalid response", exception);
         }
+    }
+
+    private Object responseFormat(LlmCompletionRequest request) {
+        if (request.responseSchema() != null) {
+            return request.responseSchema();
+        }
+        return request.responseFormat() == LlmResponseFormat.JSON ? "json" : null;
     }
 
     private LlmCompletionResponse toCompletion(OllamaChatResponse response, String requestedModel) {
@@ -80,7 +87,7 @@ public class OllamaLlmClient implements LlmClient {
         List<LlmMessage> messages,
         boolean stream,
         boolean think,
-        @JsonInclude(JsonInclude.Include.NON_NULL) String format,
+        @JsonInclude(JsonInclude.Include.NON_NULL) Object format,
         OllamaOptions options
     ) {
     }

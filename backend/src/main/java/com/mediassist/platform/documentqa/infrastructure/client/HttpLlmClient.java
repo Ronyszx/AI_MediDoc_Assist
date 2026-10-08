@@ -29,6 +29,9 @@ public class HttpLlmClient implements LlmClient {
 
     @Override
     public LlmCompletionResponse complete(LlmCompletionRequest request) {
+        if (request.responseSchema() != null) {
+            throw new LlmServiceUnavailableException("The HTTP LLM provider does not support schema-constrained responses");
+        }
         try {
             ChatCompletionResponse response = restClient.post()
                 .uri(properties.getEndpointUrl())

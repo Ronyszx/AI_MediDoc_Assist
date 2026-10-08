@@ -19,6 +19,7 @@ import com.mediassist.platform.documentqa.domain.DocumentEvidenceSelection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Component;
 
@@ -41,28 +42,48 @@ public class LlmDocumentEvidenceExtractor implements DocumentEvidenceExtractor {
 
     @Override
     public DocumentEvidenceSelection selectEvidence(String question, List<DocumentEvidenceItem> passages) {
+        if (passages.isEmpty()) {
+            throw new DocumentEvidenceException("No evidence passages available for selection");
+        }
         LlmCompletionResponse completion = llmClient.complete(new LlmCompletionRequest(llmSettings.getModelName(),
             promptBuilder.buildMessages(question, passages), llmSettings.getTemperature(),
-            llmSettings.getMaxOutputTokens(), LlmResponseFormat.JSON));
-        return new DocumentEvidenceSelection(completion.modelName(), parseIds(completion.content()));
+            llmSettings.getMaxOutputTokens(), LlmResponseFormat.JSON, selectionSchema(passages)));
+        Set<String> allowedIds = new HashSet<>();
+        passages.forEach(passage -> allowedIds.add(passage.passageId()));
+        return new DocumentEvidenceSelection(completion.modelName(), parseIds(completion.content(), allowedIds));
     }
 
-    private List<String> parseIds(String content) {
+    private Map<String, Object> selectionSchema(List<DocumentEvidenceItem> passages) {
+        var ids = passages.stream().map(DocumentEvidenceItem::passageId).toList();
+        var items = Map.of("type", "string", "enum", ids);
+        var array = Map.of("type", "array", "minItems", 0,
+            "maxItems", Math.min(settings.getMaxItems(), passages.size()), "uniqueItems", true, "items", items);
+        return Map.of("type", "object", "required", List.of("passageIds"), "additionalProperties", false,
+            "properties", Map.of("passageIds", array));
+    }
+
+    private List<String> parseIds(String content, Set<String> allowedIds) {
         if (content == null || content.length() > 8192) {
             throw new DocumentEvidenceException("Invalid evidence response size");
         }
         try {
             JsonNode root = objectMapper.reader().with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
                 .with(JsonParser.Feature.STRICT_DUPLICATE_DETECTION).readTree(content);
-            if (root == null || !root.isObject() || root.size() != 1 || !root.path("passageIds").isArray()
-                || root.path("passageIds").size() > settings.getMaxItems()) {
+            if (root == null || !root.isObject() || root.size() != 1 || !root.path("passageIds").isArray()) {
                 throw new DocumentEvidenceException("Invalid evidence selection schema");
+            }
+            if (root.path("passageIds").size() > settings.getMaxItems()) {
+                throw new DocumentEvidenceException("Evidence selection exceeds the configured limit of " + settings.getMaxItems()
+                    + " passages (received " + root.path("passageIds").size() + ")");
             }
             List<String> ids = new ArrayList<>();
             Set<String> unique = new HashSet<>();
             for (JsonNode id : root.path("passageIds")) {
                 if (!id.isTextual() || !id.textValue().matches("P[1-9][0-9]{0,2}") || !unique.add(id.textValue())) {
                     throw new DocumentEvidenceException("Invalid or repeated evidence passage ID");
+                }
+                if (!allowedIds.contains(id.textValue())) {
+                    throw new DocumentEvidenceException("Evidence selection contains an unavailable passage ID");
                 }
                 ids.add(id.textValue());
             }
