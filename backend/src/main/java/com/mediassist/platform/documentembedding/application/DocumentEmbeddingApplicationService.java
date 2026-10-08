@@ -16,11 +16,18 @@ import com.mediassist.platform.documentembedding.api.dto.SemanticSearchRequest;
 import com.mediassist.platform.documentembedding.api.dto.SemanticSearchResponse;
 import com.mediassist.platform.documentembedding.domain.DocumentChunkEmbedding;
 import com.mediassist.platform.documentembedding.domain.DocumentChunkEmbeddingRepository;
+import com.mediassist.platform.documentembedding.domain.SemanticSearchCandidate;
 import com.mediassist.platform.documentembedding.domain.SemanticSearchMatch;
+import com.mediassist.platform.documentembedding.domain.SemanticSearchQuery;
+import com.mediassist.platform.documentembedding.domain.SemanticSearchQueryResult;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -171,6 +178,51 @@ public class DocumentEmbeddingApplicationService {
             queryEmbedding.embeddings().getFirst(),
             topK
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<SemanticSearchCandidate> searchSimilarChunkCandidates(
+        @NotNull UUID documentId,
+        @NotBlank String query,
+        @Min(1) @Max(100) int candidateCount
+    ) {
+        validateDocumentExists(documentId);
+        findChunksForDocument(documentId);
+        ensureDocumentHasEmbeddings(documentId);
+
+        EmbeddingResult queryEmbedding = embeddingService.embedQuery(query);
+        return documentChunkEmbeddingRepository.searchSimilarChunkCandidates(
+            documentId,
+            queryEmbedding.modelName(),
+            queryEmbedding.embeddings().getFirst(),
+            candidateCount
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<SemanticSearchQueryResult> searchSimilarChunkBatches(
+        @NotNull UUID documentId,
+        @NotNull @Size(min = 1, max = 7) List<@NotNull @Valid SemanticSearchQuery> queries
+    ) {
+        validateDocumentExists(documentId);
+        findChunksForDocument(documentId);
+        ensureDocumentHasEmbeddings(documentId);
+
+        EmbeddingResult result = embeddingService.embedTexts(queries.stream().map(SemanticSearchQuery::query).toList());
+        if (result.embeddings().size() != queries.size() || !embeddingService.modelName().equals(result.modelName())) {
+            throw new IllegalStateException("Query embedding batch does not match the requested queries and model");
+        }
+
+        List<SemanticSearchQueryResult> batches = new ArrayList<>();
+        for (int index = 0; index < queries.size(); index++) {
+            SemanticSearchQuery query = queries.get(index);
+            List<Double> vector = result.embeddings().get(index);
+            batches.add(new SemanticSearchQueryResult(query.query(), vector,
+                documentChunkEmbeddingRepository.searchSimilarChunkCandidates(
+                    documentId, result.modelName(), vector, query.candidateCount()
+                )));
+        }
+        return List.copyOf(batches);
     }
 
     private void validateDocumentExists(UUID documentId) {

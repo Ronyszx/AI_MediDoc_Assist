@@ -39,6 +39,8 @@ mediassist:
       - pdf
     allowed-content-types:
       - application/pdf
+  extraction:
+    paragraph-drop-threshold: ${PDF_PARAGRAPH_DROP_THRESHOLD:3.0}
   chunking:
     max-chunk-size: ${DOCUMENT_CHUNK_MAX_SIZE:1000}
     overlap-size: ${DOCUMENT_CHUNK_OVERLAP_SIZE:150}
@@ -47,6 +49,26 @@ mediassist:
     model-name: ${EMBEDDING_MODEL_NAME:BAAI/bge-m3}
     dimensions: ${EMBEDDING_DIMENSIONS:1024}
     batch-size: ${EMBEDDING_BATCH_SIZE:32}
+  qa:
+    evidence:
+      enabled: ${QA_EVIDENCE_ENABLED:false}
+      max-items: ${QA_EVIDENCE_MAX_ITEMS:12}
+      max-passages: ${QA_EVIDENCE_MAX_PASSAGES:80}
+      max-passage-characters: ${QA_EVIDENCE_MAX_PASSAGE_CHARACTERS:1200}
+      max-answer-characters: ${QA_EVIDENCE_MAX_ANSWER_CHARACTERS:6000}
+    retrieval:
+      diversity-enabled: ${QA_RETRIEVAL_DIVERSITY_ENABLED:false}
+      candidate-count: ${QA_RETRIEVAL_CANDIDATE_COUNT:20}
+      relevance-weight: ${QA_RETRIEVAL_RELEVANCE_WEIGHT:0.7}
+    facets:
+      enabled: ${QA_FACET_RETRIEVAL_ENABLED:false}
+      max-facets: ${QA_MAX_FACETS:6}
+      original-candidate-count: ${QA_ORIGINAL_CANDIDATE_COUNT:20}
+      facet-candidate-count: ${QA_FACET_CANDIDATE_COUNT:10}
+      fusion-constant: ${QA_FUSION_CONSTANT:60}
+      nomination-rank-limit: ${QA_NOMINATION_RANK_LIMIT:3}
+      max-evidence-tokens: ${QA_MAX_EVIDENCE_TOKENS:4000}
+      planner-output-tokens: ${QA_PLANNER_OUTPUT_TOKENS:512}
   llm:
     provider: ${LLM_PROVIDER:ollama}
     endpoint-url: ${LLM_SERVICE_URL:http://localhost:11434/api/chat}

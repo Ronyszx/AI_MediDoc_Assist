@@ -1,10 +1,12 @@
 package com.mediassist.platform.documentqa.infrastructure.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.mediassist.platform.documentqa.application.LlmClient;
 import com.mediassist.platform.documentqa.application.LlmCompletionRequest;
 import com.mediassist.platform.documentqa.application.LlmCompletionResponse;
 import com.mediassist.platform.documentqa.application.LlmMessage;
+import com.mediassist.platform.documentqa.application.LlmResponseFormat;
 import com.mediassist.platform.documentqa.application.LlmServiceUnavailableException;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -41,6 +43,7 @@ public class OllamaLlmClient implements LlmClient {
                     request.messages(),
                     false,
                     false,
+                    responseFormat(request),
                     new OllamaOptions(
                         request.temperature(),
                         request.maxOutputTokens(),
@@ -54,6 +57,13 @@ public class OllamaLlmClient implements LlmClient {
         } catch (RestClientException exception) {
             throw new LlmServiceUnavailableException("Ollama service is unavailable or returned an invalid response", exception);
         }
+    }
+
+    private Object responseFormat(LlmCompletionRequest request) {
+        if (request.responseSchema() != null) {
+            return request.responseSchema();
+        }
+        return request.responseFormat() == LlmResponseFormat.JSON ? "json" : null;
     }
 
     private LlmCompletionResponse toCompletion(OllamaChatResponse response, String requestedModel) {
@@ -77,6 +87,7 @@ public class OllamaLlmClient implements LlmClient {
         List<LlmMessage> messages,
         boolean stream,
         boolean think,
+        @JsonInclude(JsonInclude.Include.NON_NULL) Object format,
         OllamaOptions options
     ) {
     }

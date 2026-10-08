@@ -17,6 +17,7 @@ public class DocumentChunkingProperties {
     private int maxChunkSize = 1000;
 
     @Min(0)
+    // Target overlap; complete-sentence alignment can increase or reduce the actual overlap.
     private int overlapSize = 150;
 
     @AssertTrue(message = "overlap-size must be smaller than max-chunk-size")

@@ -12,9 +12,11 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import com.mediassist.platform.documentqa.application.LlmCompletionRequest;
 import com.mediassist.platform.documentqa.application.LlmCompletionResponse;
 import com.mediassist.platform.documentqa.application.LlmMessage;
+import com.mediassist.platform.documentqa.application.LlmResponseFormat;
 import com.mediassist.platform.documentqa.application.LlmServiceUnavailableException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,6 +50,7 @@ class OllamaLlmClientTest {
             .andExpect(jsonPath("$.messages[1].content").value("Summarize the supplied context."))
             .andExpect(jsonPath("$.stream").value(false))
             .andExpect(jsonPath("$.think").value(false))
+            .andExpect(jsonPath("$.format").doesNotExist())
             .andExpect(jsonPath("$.options.temperature").value(0.2))
             .andExpect(jsonPath("$.options.num_predict").value(800))
             .andExpect(jsonPath("$.options.num_ctx").value(4096))
@@ -135,5 +138,40 @@ class OllamaLlmClientTest {
             0.2,
             800
         );
+    }
+
+    @Test
+    void shouldRequestJsonOnlyForStructuredCompletions() {
+        server.expect(requestTo(properties.getEndpointUrl()))
+            .andExpect(jsonPath("$.format").value("json"))
+            .andExpect(jsonPath("$.options.num_predict").value(512))
+            .andRespond(withSuccess("""
+                {"message":{"content":"{\\"facets\\":[]}"},"done":true}
+                """, MediaType.APPLICATION_JSON));
+        var request = completionRequest();
+        var completion = client.complete(new LlmCompletionRequest(request.modelName(), request.messages(),
+            0, 512, LlmResponseFormat.JSON));
+        assertThat(completion.content()).isEqualTo("{\"facets\":[]}");
+        server.verify();
+    }
+
+    @Test
+    void shouldSendAProvidedJsonSchemaInsteadOfGenericJsonMode() {
+        Map<String, Object> schema = Map.of("type", "object", "additionalProperties", false,
+            "required", List.of("passageIds"), "properties", Map.of("passageIds", Map.of("type", "array",
+                "maxItems", 2, "items", Map.of("type", "string", "enum", List.of("P1", "P2")))));
+        server.expect(requestTo(properties.getEndpointUrl()))
+            .andExpect(jsonPath("$.format.type").value("object"))
+            .andExpect(jsonPath("$.format.additionalProperties").value(false))
+            .andExpect(jsonPath("$.format.properties.passageIds.maxItems").value(2))
+            .andExpect(jsonPath("$.format.properties.passageIds.items.enum[1]").value("P2"))
+            .andRespond(withSuccess("""
+                {"message":{"content":"{\\"passageIds\\":[\\"P1\\"]}"},"done":true}
+                """, MediaType.APPLICATION_JSON));
+        var request = completionRequest();
+        assertThat(client.complete(new LlmCompletionRequest(request.modelName(), request.messages(),
+            request.temperature(), request.maxOutputTokens(), LlmResponseFormat.JSON, schema)).content())
+            .isEqualTo("{\"passageIds\":[\"P1\"]}");
+        server.verify();
     }
 }

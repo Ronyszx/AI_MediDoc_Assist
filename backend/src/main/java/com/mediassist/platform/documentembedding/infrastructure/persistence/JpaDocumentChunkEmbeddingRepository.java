@@ -3,11 +3,13 @@ package com.mediassist.platform.documentembedding.infrastructure.persistence;
 import com.mediassist.platform.documentchunk.domain.DocumentChunk;
 import com.mediassist.platform.documentembedding.domain.DocumentChunkEmbedding;
 import com.mediassist.platform.documentembedding.domain.DocumentChunkEmbeddingRepository;
+import com.mediassist.platform.documentembedding.domain.SemanticSearchCandidate;
 import com.mediassist.platform.documentembedding.domain.SemanticSearchMatch;
 import jakarta.persistence.EntityManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -131,6 +133,47 @@ public class JpaDocumentChunkEmbeddingRepository implements DocumentChunkEmbeddi
             order by embedding.embedding <=> cast(:queryEmbedding as vector)
             limit :topK
             """, parameters, new SemanticSearchMatchRowMapper());
+    }
+
+    @Override
+    public List<SemanticSearchCandidate> searchSimilarChunkCandidates(
+        UUID documentId,
+        String modelName,
+        List<Double> queryEmbedding,
+        int candidateCount
+    ) {
+        MapSqlParameterSource parameters = new MapSqlParameterSource()
+            .addValue("documentId", documentId)
+            .addValue("modelName", modelName)
+            .addValue("queryEmbedding", toVectorLiteral(queryEmbedding))
+            .addValue("candidateCount", candidateCount);
+
+        SemanticSearchMatchRowMapper matchMapper = new SemanticSearchMatchRowMapper();
+        return jdbcTemplate.query("""
+            select
+                chunk.id as chunk_id,
+                chunk.chunk_index as chunk_index,
+                chunk.chunk_text as chunk_text,
+                embedding.model_name as model_name,
+                embedding.embedding::text as embedding_vector,
+                1 - (embedding.embedding <=> cast(:queryEmbedding as vector)) as similarity_score
+            from document_chunk_embeddings embedding
+            join document_chunks chunk on chunk.id = embedding.chunk_id
+            join document_extractions extraction on extraction.id = chunk.document_extraction_id
+            where extraction.document_id = :documentId
+              and embedding.model_name = :modelName
+            order by embedding.embedding <=> cast(:queryEmbedding as vector), chunk.chunk_index, chunk.id
+            limit :candidateCount
+            """, parameters, (resultSet, rowNumber) -> new SemanticSearchCandidate(
+                matchMapper.mapRow(resultSet, rowNumber),
+                parseVector(resultSet.getString("embedding_vector"))
+            ));
+    }
+
+    private List<Double> parseVector(String vector) {
+        return Arrays.stream(vector.substring(1, vector.length() - 1).split(","))
+            .map(Double::valueOf)
+            .toList();
     }
 
     private String toVectorLiteral(List<Double> embedding) {
